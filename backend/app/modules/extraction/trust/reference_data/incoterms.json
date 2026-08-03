@@ -1,0 +1,13 @@
+[
+  {"canonical_id": "incoterm:EXW", "canonical_name": "Ex Works", "aliases": ["EXW", "Ex Works"]},
+  {"canonical_id": "incoterm:FCA", "canonical_name": "Free Carrier", "aliases": ["FCA", "Free Carrier"]},
+  {"canonical_id": "incoterm:CPT", "canonical_name": "Carriage Paid To", "aliases": ["CPT", "Carriage Paid To"]},
+  {"canonical_id": "incoterm:CIP", "canonical_name": "Carriage and Insurance Paid To", "aliases": ["CIP", "Carriage and Insurance Paid To"]},
+  {"canonical_id": "incoterm:DAP", "canonical_name": "Delivered At Place", "aliases": ["DAP", "Delivered At Place"]},
+  {"canonical_id": "incoterm:DPU", "canonical_name": "Delivered At Place Unloaded", "aliases": ["DPU", "Delivered At Place Unloaded"]},
+  {"canonical_id": "incoterm:DDP", "canonical_name": "Delivered Duty Paid", "aliases": ["DDP", "Delivered Duty Paid"]},
+  {"canonical_id": "incoterm:FAS", "canonical_name": "Free Alongside Ship", "aliases": ["FAS", "Free Alongside Ship"]},
+  {"canonical_id": "incoterm:FOB", "canonical_name": "Free On Board", "aliases": ["FOB", "F.O.B.", "Free On Board"]},
+  {"canonical_id": "incoterm:CFR", "canonical_name": "Cost and Freight", "aliases": ["CFR", "C&F", "CNF", "Cost and Freight"]},
+  {"canonical_id": "incoterm:CIF", "canonical_name": "Cost, Insurance and Freight", "aliases": ["CIF", "C.I.F.", "Cost Insurance and Freight"]}
+]

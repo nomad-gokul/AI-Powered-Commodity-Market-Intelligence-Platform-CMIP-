@@ -1,0 +1,22 @@
+[
+  {"canonical_id": "commodity:brent_crude", "canonical_name": "Brent Crude", "aliases": ["Brent", "Brent Crude", "Brent Crude Oil", "ICE Brent"]},
+  {"canonical_id": "commodity:wti_crude", "canonical_name": "WTI Crude", "aliases": ["WTI", "WTI Crude", "West Texas Intermediate"]},
+  {"canonical_id": "commodity:dubai_crude", "canonical_name": "Dubai Crude", "aliases": ["Dubai", "Dubai Crude"]},
+  {"canonical_id": "commodity:thermal_coal", "canonical_name": "Thermal Coal", "aliases": ["Thermal Coal", "Steam Coal", "Energy Coal"]},
+  {"canonical_id": "commodity:coking_coal", "canonical_name": "Coking Coal", "aliases": ["Coking Coal", "Metallurgical Coal", "Met Coal"]},
+  {"canonical_id": "commodity:iron_ore", "canonical_name": "Iron Ore", "aliases": ["Iron Ore", "Fe Ore"]},
+  {"canonical_id": "commodity:natural_gas", "canonical_name": "Natural Gas", "aliases": ["Natural Gas", "NatGas", "LNG", "Liquefied Natural Gas"]},
+  {"canonical_id": "commodity:copper", "canonical_name": "Copper", "aliases": ["Copper", "Cu"]},
+  {"canonical_id": "commodity:aluminium", "canonical_name": "Aluminium", "aliases": ["Aluminium", "Aluminum", "Al"]},
+  {"canonical_id": "commodity:gold", "canonical_name": "Gold", "aliases": ["Gold", "Au"]},
+  {"canonical_id": "commodity:silver", "canonical_name": "Silver", "aliases": ["Silver", "Ag"]},
+  {"canonical_id": "commodity:wheat", "canonical_name": "Wheat", "aliases": ["Wheat"]},
+  {"canonical_id": "commodity:corn", "canonical_name": "Corn", "aliases": ["Corn", "Maize"]},
+  {"canonical_id": "commodity:soybeans", "canonical_name": "Soybeans", "aliases": ["Soybeans", "Soybean", "Soya"]},
+  {"canonical_id": "commodity:sugar", "canonical_name": "Sugar", "aliases": ["Sugar"]},
+  {"canonical_id": "commodity:cotton", "canonical_name": "Cotton", "aliases": ["Cotton"]},
+  {"canonical_id": "commodity:palm_oil", "canonical_name": "Palm Oil", "aliases": ["Palm Oil", "CPO", "Crude Palm Oil"]},
+  {"canonical_id": "commodity:naphtha", "canonical_name": "Naphtha", "aliases": ["Naphtha"]},
+  {"canonical_id": "commodity:gasoil", "canonical_name": "Gasoil", "aliases": ["Gasoil", "Gas Oil", "Diesel"]},
+  {"canonical_id": "commodity:jet_fuel", "canonical_name": "Jet Fuel", "aliases": ["Jet Fuel", "Jet Kerosene", "Jet A-1"]}
+]

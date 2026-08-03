@@ -1,0 +1,17 @@
+[
+  {"canonical_id": "unit:metric_ton", "canonical_name": "Metric Ton", "dimension": "mass", "aliases": ["MT", "Metric Ton", "Metric Tons", "Metric Tonne", "Metric Tonnes", "Tonne", "Tonnes", "T", "Tons", "Ton"]},
+  {"canonical_id": "unit:kilogram", "canonical_name": "Kilogram", "dimension": "mass", "aliases": ["KG", "Kg", "Kilogram", "Kilograms"]},
+  {"canonical_id": "unit:pound", "canonical_name": "Pound", "dimension": "mass", "aliases": ["LB", "LBS", "Pound", "Pounds"]},
+  {"canonical_id": "unit:short_ton", "canonical_name": "Short Ton", "dimension": "mass", "aliases": ["Short Ton", "Short Tons", "US Ton"]},
+  {"canonical_id": "unit:long_ton", "canonical_name": "Long Ton", "dimension": "mass", "aliases": ["Long Ton", "Long Tons", "UK Ton"]},
+  {"canonical_id": "unit:barrel", "canonical_name": "Barrel", "dimension": "volume", "aliases": ["BBL", "BBLS", "Barrel", "Barrels", "Bbl"]},
+  {"canonical_id": "unit:liter", "canonical_name": "Liter", "dimension": "volume", "aliases": ["L", "Liter", "Liters", "Litre", "Litres"]},
+  {"canonical_id": "unit:gallon", "canonical_name": "Gallon", "dimension": "volume", "aliases": ["GAL", "Gallon", "Gallons"]},
+  {"canonical_id": "unit:cubic_meter", "canonical_name": "Cubic Meter", "dimension": "volume", "aliases": ["CBM", "M3", "Cubic Meter", "Cubic Meters", "Cubic Metre"]},
+  {"canonical_id": "unit:mmbtu", "canonical_name": "Million British Thermal Units", "dimension": "energy", "aliases": ["MMBtu", "MMBTU", "Million BTU"]},
+  {"canonical_id": "unit:therm", "canonical_name": "Therm", "dimension": "energy", "aliases": ["Therm", "Therms"]},
+  {"canonical_id": "unit:mwh", "canonical_name": "Megawatt Hour", "dimension": "energy", "aliases": ["MWh", "MWH", "Megawatt Hour"]},
+  {"canonical_id": "unit:teu", "canonical_name": "Twenty-foot Equivalent Unit", "dimension": "count", "aliases": ["TEU", "TEUs"]},
+  {"canonical_id": "unit:each", "canonical_name": "Each", "dimension": "count", "aliases": ["Each", "PCS", "Pieces", "Units"]},
+  {"canonical_id": "unit:troy_ounce", "canonical_name": "Troy Ounce", "dimension": "mass", "aliases": ["Troy Ounce", "Troy Oz", "Oz T"]}
+]

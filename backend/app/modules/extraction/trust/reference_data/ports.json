@@ -1,0 +1,22 @@
+[
+  {"canonical_id": "port:mundra", "canonical_name": "Mundra", "aliases": ["Mundra", "Mundra Port"]},
+  {"canonical_id": "port:jnpt", "canonical_name": "Jawaharlal Nehru Port", "aliases": ["JNPT", "Jawaharlal Nehru Port", "Nhava Sheva"]},
+  {"canonical_id": "port:rotterdam", "canonical_name": "Rotterdam", "aliases": ["Rotterdam", "Port of Rotterdam"]},
+  {"canonical_id": "port:singapore", "canonical_name": "Singapore", "aliases": ["Singapore", "Port of Singapore"]},
+  {"canonical_id": "port:houston", "canonical_name": "Houston", "aliases": ["Houston", "Port of Houston"]},
+  {"canonical_id": "port:fujairah", "canonical_name": "Fujairah", "aliases": ["Fujairah", "Port of Fujairah"]},
+  {"canonical_id": "port:shanghai", "canonical_name": "Shanghai", "aliases": ["Shanghai", "Port of Shanghai"]},
+  {"canonical_id": "port:qingdao", "canonical_name": "Qingdao", "aliases": ["Qingdao", "Port of Qingdao"]},
+  {"canonical_id": "port:antwerp", "canonical_name": "Antwerp", "aliases": ["Antwerp", "Port of Antwerp"]},
+  {"canonical_id": "port:fos", "canonical_name": "Fos-sur-Mer", "aliases": ["Fos", "Fos-sur-Mer"]},
+  {"canonical_id": "port:ras_tanura", "canonical_name": "Ras Tanura", "aliases": ["Ras Tanura"]},
+  {"canonical_id": "port:jebel_ali", "canonical_name": "Jebel Ali", "aliases": ["Jebel Ali", "Port of Jebel Ali"]},
+  {"canonical_id": "port:santos", "canonical_name": "Santos", "aliases": ["Santos", "Port of Santos"]},
+  {"canonical_id": "port:richards_bay", "canonical_name": "Richards Bay", "aliases": ["Richards Bay"]},
+  {"canonical_id": "port:newcastle", "canonical_name": "Newcastle", "aliases": ["Newcastle", "Port of Newcastle"]},
+  {"canonical_id": "port:kandla", "canonical_name": "Kandla", "aliases": ["Kandla", "Deendayal Port"]},
+  {"canonical_id": "port:visakhapatnam", "canonical_name": "Visakhapatnam", "aliases": ["Visakhapatnam", "Vizag"]},
+  {"canonical_id": "port:paradip", "canonical_name": "Paradip", "aliases": ["Paradip", "Paradip Port"]},
+  {"canonical_id": "port:ho_chi_minh", "canonical_name": "Ho Chi Minh City", "aliases": ["Ho Chi Minh City", "Ho Chi Minh", "Saigon"]},
+  {"canonical_id": "port:busan", "canonical_name": "Busan", "aliases": ["Busan", "Port of Busan"]}
+]

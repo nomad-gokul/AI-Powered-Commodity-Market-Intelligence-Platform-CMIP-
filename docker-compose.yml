@@ -1,0 +1,77 @@
+# Phase 2 scope: database + cache + API + ingestion worker. A MinIO/S3
+# container and the frontend are added in the phases that actually need
+# them - an unused service in compose is a maintenance trap, not a
+# convenience.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cmip}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cmip_dev_password}
+      POSTGRES_DB: ${POSTGRES_DB:-cmip}
+    ports:
+      # Host port 5544 (not 5432) - avoids colliding with any other local
+      # Postgres instance. Only the internal compose-network port (5432)
+      # matters to the `api` service.
+      - "5544:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cmip}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      # Host port 6380 (not 6379) - same reasoning as postgres above.
+      - "6380:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      # Host port 8010 (not 8000) - avoids colliding with any other local API.
+      - "8010:8000"
+    volumes:
+      - ./backend:/app
+      # Shared with `worker`: STORAGE_PROVIDER=local writes here from the
+      # api container and reads happen from the worker container - without
+      # a shared volume, the worker would never see an uploaded file.
+      - documents_data:/app/data/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: ./backend
+    env_file:
+      - .env
+    command: arq app.worker.settings.WorkerSettings
+    volumes:
+      - ./backend:/app
+      - documents_data:/app/data/documents
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  documents_data:

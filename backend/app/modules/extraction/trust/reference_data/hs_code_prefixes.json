@@ -1,0 +1,20 @@
+[
+  {"canonical_id": "hs:10", "canonical_name": "Cereals", "aliases": ["10"]},
+  {"canonical_id": "hs:12", "canonical_name": "Oil seeds and oleaginous fruits", "aliases": ["12"]},
+  {"canonical_id": "hs:15", "canonical_name": "Animal or vegetable fats and oils", "aliases": ["15"]},
+  {"canonical_id": "hs:17", "canonical_name": "Sugars and sugar confectionery", "aliases": ["17"]},
+  {"canonical_id": "hs:26", "canonical_name": "Ores, slag and ash", "aliases": ["26"]},
+  {"canonical_id": "hs:27", "canonical_name": "Mineral fuels, oils and products of their distillation", "aliases": ["27"]},
+  {"canonical_id": "hs:28", "canonical_name": "Inorganic chemicals", "aliases": ["28"]},
+  {"canonical_id": "hs:29", "canonical_name": "Organic chemicals", "aliases": ["29"]},
+  {"canonical_id": "hs:39", "canonical_name": "Plastics and articles thereof", "aliases": ["39"]},
+  {"canonical_id": "hs:44", "canonical_name": "Wood and articles of wood", "aliases": ["44"]},
+  {"canonical_id": "hs:47", "canonical_name": "Pulp of wood or of other fibrous cellulosic material", "aliases": ["47"]},
+  {"canonical_id": "hs:52", "canonical_name": "Cotton", "aliases": ["52"]},
+  {"canonical_id": "hs:71", "canonical_name": "Natural or cultured pearls, precious metals and stones", "aliases": ["71"]},
+  {"canonical_id": "hs:72", "canonical_name": "Iron and steel", "aliases": ["72"]},
+  {"canonical_id": "hs:74", "canonical_name": "Copper and articles thereof", "aliases": ["74"]},
+  {"canonical_id": "hs:76", "canonical_name": "Aluminium and articles thereof", "aliases": ["76"]},
+  {"canonical_id": "hs:78", "canonical_name": "Lead and articles thereof", "aliases": ["78"]},
+  {"canonical_id": "hs:79", "canonical_name": "Zinc and articles thereof", "aliases": ["79"]}
+]

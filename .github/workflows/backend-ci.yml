@@ -1,0 +1,84 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  lint-typecheck-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cmip
+          POSTGRES_PASSWORD: cmip_ci_password
+          POSTGRES_DB: cmip
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cmip"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://cmip:cmip_ci_password@localhost:5432/cmip
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET_KEY: ci-test-secret-not-for-production
+      STORAGE_PROVIDER: local
+      STORAGE_LOCAL_ROOT: /tmp/cmip-ci-documents
+      OCR_TESSERACT_CMD: /usr/bin/tesseract
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: backend/pyproject.toml
+
+      # Matches the Dockerfile's tesseract-ocr install - CI runs the same
+      # real-OCR tests the Docker image needs to support, not a mocked
+      # substitute (see docs/ARCHITECTURE.md's OCR-provider strategy).
+      - name: Install Tesseract OCR
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr
+
+      - name: Install dependencies
+        run: pip install -e ".[dev]"
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Type check (mypy)
+        run: mypy app
+
+      - name: Apply migrations
+        run: alembic upgrade head
+
+      - name: Verify no schema drift (models vs migrations)
+        run: alembic check
+
+      - name: Run tests with coverage
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=90

@@ -1,0 +1,108 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app"]
+
+[project]
+name = "cmip-backend"
+version = "0.1.0"
+description = "AI Commodity Market Intelligence Platform - backend"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "sqlalchemy[asyncio]>=2.0.35",
+    "asyncpg>=0.29.0",
+    "alembic>=1.13.2",
+    "pydantic[email]>=2.9.0",
+    "pydantic-settings>=2.5.2",
+    "redis>=5.0.8",
+    "structlog>=24.4.0",
+    "passlib[bcrypt]>=1.7.4",
+    # passlib 1.7.4's bcrypt backend detection breaks on bcrypt>=4.1 (which
+    # removed the `__about__` attribute passlib probes for). Pin below that
+    # until passlib ships a fix.
+    "bcrypt>=4.0.1,<4.1",
+    "python-jose[cryptography]>=3.3.0",
+    # Phase 2: document ingestion
+    "arq>=0.26.1",
+    "aiofiles>=24.1.0",
+    "aioboto3>=13.2.0",
+    "pymupdf>=1.24.11",
+    "pdfplumber>=0.11.4",
+    "pytesseract>=0.3.13",
+    "pillow>=10.4.0",
+    "tiktoken>=0.8.0",
+    "langdetect>=1.0.9",
+    "prometheus-client>=0.21.0",
+    "python-multipart>=0.0.20",
+    "python-magic-bin>=0.4.14; sys_platform == 'win32'",
+    "python-magic>=0.4.27; sys_platform != 'win32'",
+    # Phase 3.1: AI engine & LLM provider infrastructure
+    "groq>=0.11.0",
+    "anthropic>=0.39.0",
+    "openai>=1.54.0",
+    "httpx>=0.27.2",
+    "tenacity>=9.0.0",
+]
+
+# NOTE: pgvector and langgraph are intentionally NOT dependencies yet - those
+# land in later phases (RAG/embeddings and the LangGraphEngine backend
+# respectively). PaddleOCR is available as the optional [paddleocr] extra
+# below, not a default/dev dependency: paddlepaddle's Windows wheel is
+# unreliable to install and this repo's dev environment can't verify it end
+# to end, so it is implemented for real but not exercised by the default
+# test suite (see docs/ARCHITECTURE.md). Groq/Claude/OpenAI/Ollama provider
+# SDKs ARE default dependencies (not optional) since LLMProvider selection
+# is a runtime config choice (LLM_PROVIDER=...), not a build-time one - see
+# docs/ARCHITECTURE.md's AI Infrastructure section for the provider testing
+# strategy (Groq is real+tested via GROQ_API_KEY; Claude/OpenAI/Ollama are
+# implemented for real against their official SDKs but unverified in this
+# environment, the same treatment PaddleOCR got in Phase 2).
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.9",
+    # PEP 695 generic syntax (class Foo[T]:) is only supported without the
+    # experimental --enable-incomplete-feature flag from mypy 1.13+.
+    "mypy>=1.13",
+    # moto's in-process mock_aws intercepts sync botocore HTTP calls, but
+    # is incompatible with aiobotocore's async response body handling (a
+    # real, verified failure - not theoretical) - so S3StorageProvider is
+    # tested against moto's ThreadedMotoServer (a real local HTTP server)
+    # instead, which needs the [server] extra.
+    "moto[s3,server]>=5.0.16",
+    "types-aiofiles>=24.1.0",
+]
+paddleocr = [
+    "paddleocr>=2.9.1",
+    "paddlepaddle>=2.6.2",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# A single event-loop for the whole test session, matching how the app
+# actually runs (one loop per process). Without this, pytest-asyncio's
+# default per-test loop breaks the module-level cached Redis client
+# (asyncio connections can't cross event-loop boundaries) - this bites
+# hardest on Windows' ProactorEventLoop.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true

@@ -1,0 +1,22 @@
+[
+  {"canonical_id": "currency:USD", "canonical_name": "US Dollar", "aliases": ["USD", "US$", "$", "US Dollar", "United States Dollar", "Dollar", "Dollars"]},
+  {"canonical_id": "currency:EUR", "canonical_name": "Euro", "aliases": ["EUR", "€", "Euro", "Euros"]},
+  {"canonical_id": "currency:GBP", "canonical_name": "British Pound", "aliases": ["GBP", "£", "British Pound", "Pound Sterling", "Sterling"]},
+  {"canonical_id": "currency:JPY", "canonical_name": "Japanese Yen", "aliases": ["JPY", "¥", "Yen", "Japanese Yen"]},
+  {"canonical_id": "currency:CNY", "canonical_name": "Chinese Yuan", "aliases": ["CNY", "RMB", "Yuan", "Renminbi", "Chinese Yuan"]},
+  {"canonical_id": "currency:INR", "canonical_name": "Indian Rupee", "aliases": ["INR", "Rs", "Rs.", "Indian Rupee", "Rupee", "Rupees"]},
+  {"canonical_id": "currency:AED", "canonical_name": "UAE Dirham", "aliases": ["AED", "Dirham", "UAE Dirham"]},
+  {"canonical_id": "currency:SAR", "canonical_name": "Saudi Riyal", "aliases": ["SAR", "Riyal", "Saudi Riyal"]},
+  {"canonical_id": "currency:RUB", "canonical_name": "Russian Ruble", "aliases": ["RUB", "Ruble", "Rouble", "Russian Ruble"]},
+  {"canonical_id": "currency:SGD", "canonical_name": "Singapore Dollar", "aliases": ["SGD", "S$", "Singapore Dollar"]},
+  {"canonical_id": "currency:AUD", "canonical_name": "Australian Dollar", "aliases": ["AUD", "A$", "Australian Dollar"]},
+  {"canonical_id": "currency:BRL", "canonical_name": "Brazilian Real", "aliases": ["BRL", "R$", "Brazilian Real", "Real"]},
+  {"canonical_id": "currency:KRW", "canonical_name": "South Korean Won", "aliases": ["KRW", "₩", "Won", "South Korean Won"]},
+  {"canonical_id": "currency:CAD", "canonical_name": "Canadian Dollar", "aliases": ["CAD", "C$", "Canadian Dollar"]},
+  {"canonical_id": "currency:QAR", "canonical_name": "Qatari Riyal", "aliases": ["QAR", "Qatari Riyal"]},
+  {"canonical_id": "currency:KWD", "canonical_name": "Kuwaiti Dinar", "aliases": ["KWD", "Kuwaiti Dinar"]},
+  {"canonical_id": "currency:ZAR", "canonical_name": "South African Rand", "aliases": ["ZAR", "Rand", "South African Rand"]},
+  {"canonical_id": "currency:IDR", "canonical_name": "Indonesian Rupiah", "aliases": ["IDR", "Rupiah", "Indonesian Rupiah"]},
+  {"canonical_id": "currency:MYR", "canonical_name": "Malaysian Ringgit", "aliases": ["MYR", "RM", "Ringgit", "Malaysian Ringgit"]},
+  {"canonical_id": "currency:TRY", "canonical_name": "Turkish Lira", "aliases": ["TRY", "Turkish Lira", "Lira"]}
+]

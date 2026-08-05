@@ -89,6 +89,23 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.1"
 
+    # Retrieval (Phase 5)
+    # Unlike llm_provider/groq_model/... above, backend has no need for its
+    # own embedding_provider/model fields: ai_service.embeddings.base.
+    # EmbeddingProvider exposes `.model` directly (one provider instance is
+    # bound to exactly one model, since dimension is fixed per instance),
+    # so app.modules.retrieval.embedding_service reads that from the
+    # provider object instead of duplicating the model name here. These
+    # remaining fields ARE backend-only concerns - pure retrieval-
+    # orchestration parameters ai-service has no reason to know about.
+    embedding_dimension: int = 1536
+    """Must match app.modules.retrieval.models.EMBEDDING_DIMENSION and
+    ai_service.embeddings.models.EMBEDDING_DIMENSION - used defensively to
+    fail fast if those three independently declared constants ever drift."""
+    retrieval_top_k: int = 10
+    retrieval_max_candidates: int = 200
+    retrieval_graph_expansion_depth: int = 2
+
     @property
     def is_production(self) -> bool:
         return self.environment.lower() == "production"
@@ -101,7 +118,7 @@ class Settings(BaseSettings):
         LLM_PROVIDER locally without yet holding every provider's key is a
         normal, unblocked workflow. The equivalent "provider actually
         constructible" check for the selected provider still happens eagerly
-        at factory-construction time (see app.ai.providers.factory) even in
+        at factory-construction time (see ai_service.providers.factory) even in
         development - this validator only tightens things further for prod.
         """
         if not self.is_production:

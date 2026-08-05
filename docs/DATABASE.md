@@ -1,9 +1,9 @@
-# Database Schema (Phase 1 + Phase 2 + Phase 3.2 + Phase 3.3 + Phase 4)
+# Database Schema (Phase 1 + Phase 2 + Phase 3.2 + Phase 3.3 + Phase 4 + Phase 5)
 
-PostgreSQL 16. Migrations: `backend/alembic/versions/`. This document
-covers the twenty-five tables that exist today; it grows with each
-phase. (Phase 3.1 added no tables - pure AI infrastructure, see
-docs/ARCHITECTURE.md.)
+PostgreSQL 16 with the pgvector extension (since Phase 5). Migrations:
+`backend/alembic/versions/`. This document covers the twenty-eight tables
+that exist today; it grows with each phase. (Phase 3.1 added no tables -
+pure AI infrastructure, see docs/ARCHITECTURE.md.)
 
 ## Entity-relationship overview
 
@@ -57,6 +57,14 @@ graph_nodes ──self-ref── (merged_into_id, tombstone chain)  │
   │
   └── one row per canonical_id - aggregates entities across every
       extraction_run/document in the corpus, not scoped to one
+
+users ──< retrieval_runs  (requested_by_user_id, nullable + ON DELETE SET NULL)
+              │
+              └──< retrieval_results  (retrieval_run_id -> retrieval_runs)
+
+embeddings  (polymorphic - source_type + source_id, no FK: two of its five
+             source types - canonical_entity, ontology_definition - have
+             no database row to reference at all)
 ```
 
 ## `users`
@@ -185,7 +193,10 @@ schema-ready for a future versioning endpoint without a migration.
 
 ## `document_chunks`
 
-Metadata only - no embeddings yet (pgvector arrives in a later phase).
+Metadata plus (since Phase 5) a generated full-text-search column - real
+vector embeddings live in the separate polymorphic `embeddings` table
+below, not a column here (a chunk is only one of five embeddable source
+types).
 
 | Column | Type | Notes |
 |---|---|---|
@@ -196,6 +207,7 @@ Metadata only - no embeddings yet (pgvector arrives in a later phase).
 | `text` | text | |
 | `token_count` | integer | `tiktoken` (`cl100k_base`) |
 | `metadata_json` | jsonb | `source_pages` (when a chunk spans pages) and `tables` (any pdfplumber-extracted table rows on the chunk's page) |
+| `text_search` | tsvector, `GENERATED ALWAYS AS (to_tsvector('english', text)) STORED` | Phase 5: never written by the application - `BM25Search`'s `ts_rank_cd`/`websearch_to_tsquery` queries read it. GIN-indexed (`ix_document_chunks_text_search`) |
 | `created_at`, `updated_at` | timestamptz | |
 
 Every ingestion run **deletes and re-inserts** a document's chunks rather
@@ -535,6 +547,78 @@ Only one `graph_build_run` may be `pending`/`running` at a time (checked
 by `GraphService.trigger_rebuild`, enforced at the application layer -
 the graph is one shared structure, unlike trust's per-`extraction_run_id`
 concurrency scoping).
+
+## `embeddings` (Phase 5)
+
+One row per (source, provider, model) - a polymorphic vector store
+covering all five embeddable source types (`document_chunk`, `graph_node`,
+`graph_edge`, `canonical_entity`, `ontology_definition`). No FK on
+`source_id`: two of the five source types have no database row at all
+(`canonical_entity`/`ontology_definition` - see ARCHITECTURE.md), so
+`source_id` is a plain string, not a UUID, and there is deliberately no
+foreign-key constraint - the standard tradeoff any polymorphic-association
+table makes.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID PK | |
+| `source_type` | enum: `document_chunk`, `graph_node`, `graph_edge`, `canonical_entity`, `ontology_definition` | own native Postgres type (`embedding_source_type`) |
+| `source_id` | varchar(256) | `str(uuid)` for chunk/node/edge; the natural string key (`canonical_id` / `entity_type`) for canonical_entity/ontology_definition |
+| `embedding_provider` | varchar(32) | |
+| `embedding_model` | varchar(128) | |
+| `embedding_dimension` | integer | |
+| `embedding_hash` | varchar(64) | sha256 of the exact text embedded - checked before ever calling the provider, so identical content is never re-embedded |
+| `embedding_vector` | `vector(1536)` (pgvector) | fixed width, chosen to match `openai/text-embedding-3-small` - see ARCHITECTURE.md for the tradeoff and the migration path to change it |
+| `created_at`, `updated_at` | timestamptz | updated in place when content changes (hash differs), not append-only |
+
+Unique on `(source_type, source_id, embedding_provider, embedding_model)` -
+`uq_embeddings_source_provider_model`. HNSW index
+`ix_embeddings_vector_cosine_hnsw` (`vector_cosine_ops`) built by default;
+L2/inner-product distance remain queryable ad hoc via `VectorSearch`, just
+unindexed - a disclosed, deliberate scope decision, not an oversight.
+
+## `retrieval_runs` (Phase 5)
+
+One row per `HybridRetriever` invocation (`POST /retrieve`,
+`/retrieve/context`, or `/retrieve/graph`) - the "run" record
+`GET /retrieval-runs/{id}` reads back, same pattern as
+`extraction_runs`/`trust_pipeline_runs`/`graph_build_runs`.
+`status`/`error_message`/`requested_by_user_id` are additive beyond the
+spec's literal field list, for the same reason `graph_build_runs` added
+fields beyond its own spec: every other "run" table in this codebase
+carries a status and who triggered it.
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID PK | |
+| `query` | text | |
+| `provider`, `embedding_model` | varchar, nullable | null when the run degraded to BM25+graph-only (no embedding provider configured) - see ARCHITECTURE.md |
+| `reranker` | varchar(64), nullable | `"weighted_linear"` - `RerankerService`'s strategy name |
+| `latency_ms` | integer, nullable | |
+| `total_candidates` | integer | before top-K truncation |
+| `retrieved_results` | integer | after top-K truncation |
+| `status` | enum: `pending`, `running`, `completed`, `failed` | own native Postgres type (`retrieval_run_status`) |
+| `error_message` | text, nullable | |
+| `requested_by_user_id` | UUID, nullable, FK -> `users.id`, `ON DELETE SET NULL` | |
+| `created_at`, `updated_at` | timestamptz | |
+
+## `retrieval_results` (Phase 5)
+
+One row per ranked item in a completed retrieval run - write-once, no
+`updated_at` (matches `graph_evidence`'s simpler shape, not
+`retrieval_runs`' mutable-status shape).
+
+| Column | Type | Notes |
+|---|---|---|
+| `id` | UUID PK | |
+| `retrieval_run_id` | UUID FK -> `retrieval_runs.id`, `ON DELETE CASCADE` | |
+| `source_type` | enum: same 5 values as `embeddings.source_type` | own native Postgres type (`retrieval_result_source_type`) - deliberately not shared with `embeddings.source_type`'s type, same reasoning as `graph_build_status`/`extraction_status` |
+| `source_id` | varchar(256) | |
+| `retrieval_method` | enum: `bm25`, `vector`, `graph_expansion`, `hybrid` | own native Postgres type (`retrieval_method`); `hybrid` means the candidate was found by more than one method |
+| `score` | float | the raw method score used for initial merge/dedup |
+| `rerank_score` | float, nullable | `RerankerService`'s final weighted score |
+| `final_rank` | integer | 1-indexed |
+| `created_at` | timestamptz | |
 
 ## Timestamp defaults: `clock_timestamp()`, not `now()`
 

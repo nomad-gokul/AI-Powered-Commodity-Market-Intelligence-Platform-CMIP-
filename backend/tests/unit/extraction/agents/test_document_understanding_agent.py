@@ -2,8 +2,9 @@
 
 import uuid
 
-from app.ai.engine.types import AgentContext
-from app.ai.providers.base import LLMUsage
+from shared.agent_contracts import AgentContext
+from shared.ai_contracts import LLMUsage
+
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.agents.document_understanding_agent import DocumentUnderstandingAgent
 from app.modules.extraction.agents.schemas import DocumentMetadataOutput, DocumentTypeEnum

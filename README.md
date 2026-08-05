@@ -7,8 +7,10 @@ commentary.
 
 **Status: Phase 1 (Foundation), Phase 2 (Document Ingestion), Phase 3.1
 (AI Engine & LLM Infrastructure), Phase 3.2 (Semantic Document
-Intelligence), Phase 3.3 (Trust, Validation & Canonicalization), and
-Phase 4 (Knowledge Graph & Semantic Intelligence) complete.** Auth, RBAC,
+Intelligence), Phase 3.3 (Trust, Validation & Canonicalization),
+Phase 4 (Knowledge Graph & Semantic Intelligence), Pre-Phase 5 (AI
+Service Extraction), and Phase 5 (Knowledge Retrieval Platform)
+complete.** Auth, RBAC,
 audit logging, document upload/storage, background OCR + text/table
 extraction + chunking, a provider-agnostic AI engine (`AgentEngine` +
 `LLMProvider`, real Groq/Claude/OpenAI/Ollama implementations), a
@@ -23,7 +25,18 @@ deterministic pipeline that turns those trusted, canonicalized entities
 into a persistent, queryable knowledge graph of business relationships
 (ownership, operation, shipment, location, contractual reference) with
 full evidence provenance and hand-rolled recursive-CTE traversal, are
-all implemented and verified. See
+all implemented and verified. A purely architectural refactor (zero
+functional change) split the AI infrastructure out of
+`backend/app/ai` into two new sibling packages - `ai-service/` and
+`shared/` - so a future move to a real standalone AI deployment is a
+transport swap, not a rewrite. Most recently, a hybrid retrieval platform
+(`HybridRetriever`) combines PostgreSQL full-text search (BM25), pgvector
+similarity search, and knowledge-graph expansion into one ranked, fully
+cited result set - `EmbeddingProvider`/`EmbeddingService`,
+`QueryAnalyzer`, `RerankerService`, `CitationEngine`,
+`ContextBuilder`/`ContextService` - no LLM call anywhere in this phase
+either; it is the retrieval foundation later phases (Commentary,
+Forecasting, AI Copilot) will query through. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full roadmap.
 
 ## Stack
@@ -32,7 +45,7 @@ Python 3.12, FastAPI, SQLAlchemy 2.0 (async), PostgreSQL 16, Alembic,
 Redis, structlog, JWT (python-jose), bcrypt (passlib) - Phase 1. ARQ
 (background jobs), PyMuPDF + pdfplumber (extraction), Tesseract OCR
 (pytesseract), aioboto3/boto3 (S3), tiktoken (chunking), Prometheus client -
-Phase 2. Groq/Anthropic/OpenAI SDKs + httpx (Ollama), tenacity - Phase 3.1.
+Phase 2. Groq/Anthropic/OpenAI SDKs + httpx (Ollama) - Phase 3.1.
 Phase 3.2 adds no new dependencies - it's built entirely on Phase 3.1's
 engine/provider infrastructure plus the PyMuPDF/pdfplumber already in
 Phase 2. Phase 3.3 adds no new dependencies either - its rule engine and
@@ -41,8 +54,19 @@ also adds no new dependencies - its relationship rule engine is pure
 Python/regex, and graph traversal (neighbors, subgraph, shortest path)
 is hand-rolled Postgres `WITH RECURSIVE` SQL rather than a graph
 library (`networkx` was considered and deliberately not adopted - see
-docs/ARCHITECTURE.md). Later phases add pgvector, LangGraph, and the
-Next.js frontend as each is implemented.
+docs/ARCHITECTURE.md). Pre-Phase 5 adds no new dependencies either -
+it's a pure code-relocation: the AI SDKs above moved from `backend/`'s
+own `pyproject.toml` into a new sibling package, `ai-service/`, and
+`tenacity` (a declared-but-never-imported Phase 3.1 dependency, caught
+incidentally during the move) was dropped rather than carried forward,
+since `LLMClient`'s retry policy is hand-rolled and never used it.
+Phase 5 adds PostgreSQL's pgvector extension (`pgvector/pgvector:pg16` in
+Docker) plus two new Python dependencies: `pgvector` (backend-only, the
+SQLAlchemy `Vector` column type) and `python-dateutil` (backend-only,
+`QueryAnalyzer`'s time-range parsing) - embeddings themselves need no new
+SDK, reusing the `openai` package and `httpx` already installed for LLM
+calls since Phase 3.1. The Next.js frontend and LangGraph remain for a
+later phase.
 
 ## Quickstart
 
@@ -163,6 +187,27 @@ curl http://localhost:8010/api/v1/graph/edges/<edge_id>/evidence \
 curl -X POST http://localhost:8010/api/v1/graph/merge \
   -H "Authorization: Bearer <access_token>" -H "Content-Type: application/json" \
   -d '{"source_node_id":"<duplicate_node_id>","target_node_id":"<survivor_node_id>"}'
+
+# Graph-only retrieval - no embedding provider needed, works out of the box.
+# Auto-detects seed entities from the query text (or pass seed_canonical_ids explicitly).
+curl -X POST http://localhost:8010/api/v1/retrieve/graph \
+  -H "Authorization: Bearer <access_token>" -H "Content-Type: application/json" \
+  -d '{"query":"What does Adani Ports SEZ own?"}'
+
+# Full hybrid retrieval (BM25 + pgvector + graph expansion) and structured
+# context assembly need a real embedding provider configured
+# (EMBEDDING_PROVIDER + OPENAI_API_KEY/OLLAMA_BASE_URL in backend/.env) -
+# without one, both return 503 rather than a partial/misleading result.
+curl -X POST http://localhost:8010/api/v1/retrieve \
+  -H "Authorization: Bearer <access_token>" -H "Content-Type: application/json" \
+  -d '{"query":"who owns Mundra Port?","top_k":10}'
+curl -X POST http://localhost:8010/api/v1/retrieve/context \
+  -H "Authorization: Bearer <access_token>" -H "Content-Type: application/json" \
+  -d '{"query":"who owns Mundra Port?"}'
+
+# Read back a persisted retrieval run and its ranked, cited results
+curl http://localhost:8010/api/v1/retrieval-runs/<retrieval_run_id> \
+  -H "Authorization: Bearer <access_token>"
 ```
 
 Admin-only routes (`/api/v1/roles`, `/api/v1/users`, `/api/v1/audit-logs`)
@@ -173,42 +218,77 @@ Deleting, reprocessing, triggering extraction, triggering the trust
 pipeline, resolving review-queue items, rebuilding the graph, and merging
 graph nodes all need the `analyst` or `admin` role; `viewer` can upload,
 read, and read extraction/trust/graph results, but not trigger anything
-or delete/reprocess/resolve/rebuild/merge.
+or delete/reprocess/resolve/rebuild/merge. Retrieval (`/retrieve`,
+`/retrieve/context`, `/retrieve/graph`, `/retrieval-runs/{id}`) needs only
+`retrieval:read`, granted identically to `viewer` and `analyst` - it is
+read-only from the caller's perspective even though it performs real
+computation and persists a `RetrievalRun` as an audit side effect.
 
 ## Running tests
 
+Since Pre-Phase 5, the repo has three local packages (`shared/`,
+`ai-service/`, `backend/`) installed editable into one venv; quality
+gates run once per package:
+
 ```bash
-cd backend
-pip install -e ".[dev]"
-ruff check .              # lint
-mypy app                  # type check (strict)
-alembic upgrade head      # apply migrations to a real Postgres first
-pytest --cov=app --cov-report=term-missing
+# from the repo root, once:
+pip install -e ./shared -e ./ai-service -e "./backend[dev]"
+
+ruff check shared ai-service backend      # lint - all three
+mypy --config-file shared/pyproject.toml shared/shared
+mypy --config-file ai-service/pyproject.toml ai-service/ai_service
+mypy --config-file backend/pyproject.toml backend/app       # each package's own strict config
+
+cd backend && alembic upgrade head        # apply migrations to a real Postgres first
+
+# pytest, once per package:
+(cd shared && pytest --cov=shared --cov-report=term-missing)
+(cd ai-service && pytest --cov=ai_service --cov-report=term-missing)
+(cd backend && pytest --cov=app --cov-report=term-missing)
 ```
 
-`tests/unit/` needs no database (it does call the real, installed
-Tesseract binary and a real local moto S3 server - see
-`docs/ARCHITECTURE.md`'s OCR/storage testing notes; `app/ai/`'s provider
-tests use mocked SDK clients only, no live vendor calls). `tests/integration/`
-needs a real Postgres + Redis reachable at the URLs in `backend/.env`
-(each test runs in a rolled-back transaction, so it's safe to point at a
-real dev database - see `tests/integration/conftest.py`) - **except**
-`tests/integration/ai/test_groq_live.py`, which needs neither: it calls
-the real Groq API directly and skips cleanly if `GROQ_API_KEY` isn't set.
-Set `OCR_TESSERACT_CMD` in `backend/.env` if `tesseract` isn't on your
-`PATH` (Windows almost always needs this - see `.env.example`).
+`shared/tests/` and `ai-service/tests/unit/` need no live services
+(`ai-service`'s provider tests use mocked SDK clients only, no live
+vendor calls) - **except** `ai-service/tests/integration/test_groq_live.py`,
+which calls the real Groq API directly and skips cleanly if
+`GROQ_API_KEY` isn't set. `backend/tests/unit/` needs no database either
+(it does call the real, installed Tesseract binary and a real local moto
+S3 server - see `docs/ARCHITECTURE.md`'s OCR/storage testing notes).
+`backend/tests/integration/` needs a real Postgres + Redis reachable at
+the URLs in `backend/.env` (each test runs in a rolled-back transaction,
+so it's safe to point at a real dev database - see
+`tests/integration/conftest.py`) - and, since Phase 5, that Postgres must
+be a `pgvector/pgvector:pg16` image (or any Postgres with the `vector`
+extension installable), not plain `postgres:16-alpine`; `docker-compose.yml`
+already uses the pgvector image. Set `OCR_TESSERACT_CMD` in
+`backend/.env` if `tesseract` isn't on your `PATH` (Windows almost always
+needs this - see `.env.example`).
 
-To exercise the live Groq test, add a real key to `backend/.env`:
+To exercise the live Groq test, add a real key to `backend/.env` (read
+independently by both `backend`'s `Settings` and `ai-service`'s own
+`AISettings` - see docs/ARCHITECTURE.md):
 
 ```bash
 GROQ_API_KEY=gsk_...
 ```
 
+To exercise `POST /retrieve`/`/retrieve/context` (hybrid retrieval) rather
+than just `/retrieve/graph`, add a real embedding provider - `EMBEDDING_PROVIDER`
+defaults to `openai` (needs `OPENAI_API_KEY`); `EMBEDDING_PROVIDER=ollama`
+needs no key, just a reachable `OLLAMA_BASE_URL`. Without either, those
+two routes return a clean `503 service_unavailable` rather than a
+partial/misleading result - see docs/ARCHITECTURE.md's Phase 5 section.
+
+```bash
+EMBEDDING_PROVIDER=openai
+OPENAI_API_KEY=sk-...
+```
+
 ## Local development without Docker
 
 ```bash
+pip install -e ./shared -e ./ai-service -e "./backend[dev]"
 cd backend
-pip install -e ".[dev]"
 uvicorn app.main:app --reload
 ```
 

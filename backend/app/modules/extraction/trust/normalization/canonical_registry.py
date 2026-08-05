@@ -11,6 +11,7 @@ database write - see docs/ARCHITECTURE.md's Phase 3.3 section for why
 that tradeoff was chosen over a database-backed reference table.
 """
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -40,7 +41,9 @@ class CanonicalRegistry:
     def __init__(self, entries: list[CanonicalEntry]) -> None:
         self._entries = entries
         self._by_alias: dict[str, CanonicalEntry] = {}
+        self._by_id: dict[str, CanonicalEntry] = {}
         for entry in entries:
+            self._by_id[entry.canonical_id] = entry
             for alias in entry.aliases:
                 self._by_alias[normalize_alias(alias)] = entry
 
@@ -52,6 +55,23 @@ class CanonicalRegistry:
             canonical_id=entry.canonical_id,
             canonical_name=entry.canonical_name,
             matched_alias=raw_value,
+            extra=entry.extra,
+        )
+
+    def resolve_by_id(self, canonical_id: str) -> CanonicalMatch | None:
+        """The reverse direction of resolve(): given a canonical_id
+        already in hand (e.g. from a persisted Embedding/GraphNode row),
+        get its display name. Additive - Phase 5 (Knowledge Retrieval
+        Platform)'s ContextService needs this to label a retrieved
+        canonical_entity candidate with a human-readable name; nothing
+        about resolve()'s alias-matching behavior changes."""
+        entry = self._by_id.get(canonical_id)
+        if entry is None:
+            return None
+        return CanonicalMatch(
+            canonical_id=entry.canonical_id,
+            canonical_name=entry.canonical_name,
+            matched_alias=entry.canonical_name,
             extra=entry.extra,
         )
 
@@ -70,3 +90,10 @@ class CanonicalRegistry:
 
     def __len__(self) -> int:
         return len(self._entries)
+
+    def __iter__(self) -> Iterator[CanonicalEntry]:
+        """Additive - Phase 5's embedding-generation worker task needs to
+        embed every entry, not just resolve individual lookups. Iterates
+        in load order; entries are otherwise addressed by alias/id, never
+        by position, so order carries no meaning beyond that."""
+        return iter(self._entries)

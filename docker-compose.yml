@@ -2,10 +2,23 @@
 # container and the frontend are added in the phases that actually need
 # them - an unused service in compose is a maintenance trap, not a
 # convenience.
+#
+# Since Pre-Phase 5 (AI Service Extraction), `api`/`worker`'s build context
+# is the repo root, not backend/ - shared/ and ai-service/ are separate
+# installable packages living as siblings of backend/ that the image also
+# needs (see backend/Dockerfile). Still one image, one container per
+# service - this is not a deployment split, just a source-layout one.
+#
+# Since Phase 5 (Knowledge Retrieval Platform), postgres uses the
+# pgvector/pgvector image, not plain postgres:16-alpine - alpine has no
+# pgvector packaging, and the `vector` extension is required by the
+# embeddings table's migration (see backend/alembic/versions/
+# 68a87ef077e4_...). pgvector/pgvector:pg16 is upstream pgvector's own
+# published image, built on the official postgres:16 base.
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-cmip}
@@ -38,7 +51,8 @@ services:
 
   api:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     env_file:
       - .env
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -46,11 +60,13 @@ services:
       # Host port 8010 (not 8000) - avoids colliding with any other local API.
       - "8010:8000"
     volumes:
-      - ./backend:/app
+      - ./backend:/app/backend
+      - ./ai-service:/app/ai-service
+      - ./shared:/app/shared
       # Shared with `worker`: STORAGE_PROVIDER=local writes here from the
       # api container and reads happen from the worker container - without
       # a shared volume, the worker would never see an uploaded file.
-      - documents_data:/app/data/documents
+      - documents_data:/app/backend/data/documents
     depends_on:
       postgres:
         condition: service_healthy
@@ -59,13 +75,16 @@ services:
 
   worker:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
     env_file:
       - .env
     command: arq app.worker.settings.WorkerSettings
     volumes:
-      - ./backend:/app
-      - documents_data:/app/data/documents
+      - ./backend:/app/backend
+      - ./ai-service:/app/ai-service
+      - ./shared:/app/shared
+      - documents_data:/app/backend/data/documents
     depends_on:
       postgres:
         condition: service_healthy

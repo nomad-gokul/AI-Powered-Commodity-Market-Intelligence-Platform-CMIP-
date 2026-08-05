@@ -1,8 +1,7 @@
 """Shared test doubles for extraction agent tests - not production code."""
 
 from pydantic import BaseModel
-
-from app.ai.providers.base import LLMRequest, LLMUsage
+from shared.ai_contracts import LLMRequest, LLMUsage
 
 
 class ScriptedStructuredOutputService:

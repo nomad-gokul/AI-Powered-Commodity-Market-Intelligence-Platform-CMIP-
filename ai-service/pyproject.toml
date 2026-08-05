@@ -1,0 +1,57 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["ai_service"]
+
+[project]
+name = "cmip-ai-service"
+version = "0.1.0"
+description = "AI Commodity Market Intelligence Platform - AI service (LLM providers, client, agent engine, structured output, prompt registry, observability)"
+requires-python = ">=3.12"
+dependencies = [
+    "cmip-shared",
+    "pydantic>=2.9.0",
+    "pydantic-settings>=2.5.2",
+    "structlog>=24.4.0",
+    "prometheus-client>=0.21.0",
+    "groq>=0.11.0",
+    "anthropic>=0.39.0",
+    "openai>=1.54.0",
+    "httpx>=0.27.2",
+]
+
+# NOTE: tenacity was declared as a Phase 3.1 dependency in backend's original
+# pyproject.toml but was never actually imported anywhere - LLMClient's retry
+# policy (ai_service.client.llm_client.LLMClientRetryPolicy) is hand-rolled.
+# Dropped here rather than carried forward as dead weight (see
+# docs/ARCHITECTURE.md's Pre-Phase 5 section).
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.9",
+    "mypy>=1.13",
+    "cmip-shared[dev]",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true

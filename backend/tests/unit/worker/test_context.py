@@ -10,8 +10,8 @@ the full suite, not by any single test in isolation.
 """
 
 import pytest
+from shared.ai_exceptions import ConfigurationError
 
-from app.ai.exceptions import ConfigurationError
 from app.worker import context as context_module
 
 
@@ -31,6 +31,27 @@ class TestBuildLlmClient:
         assert context_module._build_llm_client() is sentinel
 
 
+class TestBuildEmbeddingProvider:
+    """Same graceful-degradation rationale as TestBuildLlmClient, for
+    Phase 5's generate_embeddings_task: an unconfigured embedding provider
+    must not prevent the worker from starting - only that one optional
+    task is affected."""
+
+    def test_returns_none_when_provider_is_unconfigured(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        def _raise() -> None:
+            raise ConfigurationError("OPENAI_API_KEY is required when EMBEDDING_PROVIDER=openai")
+
+        monkeypatch.setattr(context_module, "get_embedding_provider", _raise)
+        assert context_module._build_embedding_provider() is None
+
+    def test_returns_the_provider_when_configured(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        sentinel = object()
+        monkeypatch.setattr(context_module, "get_embedding_provider", lambda: sentinel)
+        assert context_module._build_embedding_provider() is sentinel
+
+
 class TestBuildWorkerContext:
     def test_structured_output_service_is_none_when_llm_client_is_none(
         self, monkeypatch: pytest.MonkeyPatch
@@ -47,3 +68,9 @@ class TestBuildWorkerContext:
         ctx = context_module.build_worker_context()
         for key in ("storage", "ocr_provider", "pdf_extractor", "table_extractor", "chunker"):
             assert ctx[key] is not None
+
+    def test_embedding_provider_key_is_present(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr(context_module, "_build_llm_client", lambda: None)
+        monkeypatch.setattr(context_module, "_build_embedding_provider", lambda: None)
+        ctx = context_module.build_worker_context()
+        assert "embedding_provider" in ctx

@@ -1,6 +1,7 @@
 """ORM models for document ingestion: documents, version history, processing
-jobs, and chunk metadata (no embeddings yet - those arrive with pgvector in
-a later phase).
+jobs, and chunk metadata. Embeddings live in a separate polymorphic table
+(app.modules.retrieval.models.Embedding, Phase 5) rather than a column
+here, since a chunk is only one of five embeddable source types.
 
 Documents/DocumentVersions/DocumentChunks have no business rules of their
 own (rule-light persistence entities), so the ORM model doubles as the
@@ -16,16 +17,18 @@ from typing import Any
 
 from sqlalchemy import (
     BigInteger,
+    Computed,
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     SmallInteger,
     String,
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB, TSVECTOR, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base, TimestampMixin
@@ -194,6 +197,7 @@ class DocumentChunk(TimestampMixin, Base):
     __tablename__ = "document_chunks"
     __table_args__ = (
         UniqueConstraint("document_id", "chunk_index", name="uq_document_chunk_index"),
+        Index("ix_document_chunks_text_search", "text_search", postgresql_using="gin"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -205,3 +209,10 @@ class DocumentChunk(TimestampMixin, Base):
     text: Mapped[str] = mapped_column(Text, nullable=False)
     token_count: Mapped[int] = mapped_column(Integer, nullable=False)
     metadata_json: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    # Phase 5 (Knowledge Retrieval Platform): a Postgres-generated column,
+    # never written by the application - BM25Search's ts_rank_cd queries
+    # read it, nothing writes it. GIN-indexed for search; a plain btree
+    # would be useless against a tsvector.
+    text_search: Mapped[Any] = mapped_column(
+        TSVECTOR, Computed("to_tsvector('english', text)", persisted=True), nullable=True
+    )

@@ -19,7 +19,8 @@ adding a nullable table_id column would close this gap.
 
 import uuid
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.extraction.trust.agents.schemas import (
     ConfidenceAgentOutput,
     NormalizationAgentOutput,

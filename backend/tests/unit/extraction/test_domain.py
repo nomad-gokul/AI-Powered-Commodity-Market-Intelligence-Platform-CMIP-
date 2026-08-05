@@ -2,7 +2,8 @@
 grounding, layout summarization, mention-context lookup, usage summation.
 No I/O, no PyMuPDF/pdfplumber - those are geometry.py's job."""
 
-from app.ai.providers.base import LLMUsage
+from shared.ai_contracts import LLMUsage
+
 from app.modules.extraction.domain import (
     BoundingBox,
     PageBlockSpan,

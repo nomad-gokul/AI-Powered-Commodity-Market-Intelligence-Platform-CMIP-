@@ -2,7 +2,8 @@
 language, and business domain; give downstream agents a short extraction
 strategy hint. First stage of the pipeline."""
 
-from app.ai.prompts.package import PromptMetadata, PromptPackage, PromptVersion
+from shared.prompt_contracts import PromptMetadata, PromptPackage, PromptVersion
+
 from app.modules.extraction.agents.schemas import DocumentMetadataOutput
 
 NAME = "document_understanding"

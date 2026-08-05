@@ -5,7 +5,8 @@ retry at the engine level, looping agents don't)."""
 import uuid
 from unittest.mock import AsyncMock
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.extraction.agents.document_understanding_agent import DocumentUnderstandingAgent
 from app.modules.extraction.agents.entity_extraction_agent import EntityExtractionAgent
 from app.modules.extraction.agents.layout_agent import LayoutAgent

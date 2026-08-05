@@ -6,8 +6,8 @@ import uuid
 from unittest.mock import AsyncMock
 
 import pytest
+from shared.agent_contracts import AgentContext
 
-from app.ai.engine.types import AgentContext
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.agents.persist_results_agent import PersistResultsAgent
 from app.modules.extraction.agents.schemas import (

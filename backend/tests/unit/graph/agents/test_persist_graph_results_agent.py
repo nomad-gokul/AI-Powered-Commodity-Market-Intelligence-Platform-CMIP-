@@ -6,8 +6,8 @@ the integration suite; this tests the agent's own upsert/dedup logic
 import uuid
 
 import pytest
+from shared.agent_contracts import AgentContext
 
-from app.ai.engine.types import AgentContext
 from app.modules.graph.agents.persist_graph_results_agent import PersistGraphResultsAgent
 from app.modules.graph.agents.schemas import (
     NodeResolutionOutput,

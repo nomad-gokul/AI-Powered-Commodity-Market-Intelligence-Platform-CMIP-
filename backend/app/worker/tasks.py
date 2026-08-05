@@ -23,12 +23,12 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
+from ai_service.engine.sequential import SequentialEngine
+from ai_service.providers.registry import get_provider_registry
 from arq.worker import Retry
+from shared.agent_contracts import AgentContext
+from shared.ai_contracts import LLMUsage
 
-from app.ai.engine.sequential import SequentialEngine
-from app.ai.engine.types import AgentContext
-from app.ai.providers.base import LLMUsage
-from app.ai.providers.registry import get_provider_registry
 from app.core.database import AsyncSessionLocal
 from app.core.logging import get_logger
 from app.core.metrics import (
@@ -89,14 +89,18 @@ from app.modules.graph.builder_service import (
     GraphBuildPartialFailure,
     GraphBuildStats,
 )
-from app.modules.graph.models import GraphBuildRun
+from app.modules.graph.models import GraphBuildRun, GraphEdge, GraphNode, GraphNodeStatus
 from app.modules.graph.repository import (
     GraphBuildRunRepository,
     GraphEdgeRepository,
     GraphEvidenceRepository,
     GraphNodeRepository,
+    OntologyTypeRepository,
 )
 from app.modules.graph.rules.builtin import get_relationship_rule_registry
+from app.modules.retrieval.embedding_service import EmbeddableItem, EmbeddingService
+from app.modules.retrieval.models import EmbeddingSourceType
+from app.modules.retrieval.repository import EmbeddingRepository
 
 logger = get_logger(__name__)
 
@@ -195,6 +199,10 @@ async def _run_pipeline(
             )
         )
     await chunk_repo.bulk_create(chunk_rows)
+    # Phase 5: enqueue embedding generation for the new chunks now that
+    # they're persisted - a separate job, not an inline call, so a slow/
+    # misconfigured embedding provider never delays ingestion completion.
+    await ctx["redis"].enqueue_job("generate_embeddings_task", document_id=str(document.id))
 
     if result.metadata is not None:
         document.language = result.metadata.language
@@ -594,6 +602,14 @@ async def run_graph_rebuild(ctx: dict[str, Any], graph_build_run_id: str) -> Non
         build_run.processing_time_ms = int((time.perf_counter() - started) * 1000)
         await session.commit()
 
+        # Phase 5: enqueue embedding generation for the rebuilt graph's
+        # nodes/edges (plus the static canonical-entity/ontology reference
+        # data) now that the rebuild has actually persisted them - same
+        # separate-job rationale as process_document's hook above.
+        await ctx["redis"].enqueue_job(
+            "generate_embeddings_task", graph_build_run_id=str(build_run.id)
+        )
+
 
 def _apply_graph_build_stats(build_run: GraphBuildRun, stats: GraphBuildStats) -> None:
     build_run.runs_processed = stats.runs_processed
@@ -612,3 +628,146 @@ async def _handle_graph_build_failure(
     build_run.completed_at = datetime.now(UTC)
     build_run.error_message = str(exc)[:2000]
     build_run.retry_count = retry_count
+
+
+async def generate_embeddings_task(
+    ctx: dict[str, Any],
+    *,
+    document_id: str | None = None,
+    graph_build_run_id: str | None = None,
+) -> None:
+    """Phase 5: embeds newly-available content so it becomes searchable.
+
+    Enqueued (not called inline), from process_document's tail once a
+    document's chunks are persisted, and from run_graph_rebuild's tail
+    once a rebuild has persisted nodes/edges - a separate job so a slow or
+    misconfigured embedding provider never delays ingestion/graph-rebuild
+    completion. Content-hash-guarded via EmbeddingService, so re-running
+    this for unchanged content is a cheap no-op, never wasted provider
+    spend or a duplicate embeddings row.
+
+    Never fails the caller: an unconfigured embedding provider (mirroring
+    run_extraction's llm_provider_not_configured degradation - see
+    worker/context.py) logs a warning and returns rather than raising, so
+    ingestion/graph-rebuild are never blocked by this optional capability.
+
+    document_id embeds that document's chunks. graph_build_run_id embeds
+    every ACTIVE graph node/edge plus the static canonical-entity/
+    ontology-definition reference data (there is no per-rebuild "what
+    changed" list to scope to, and content-hash-guarding already makes a
+    full sweep cheap after the first real run - see docs/ARCHITECTURE.md's
+    Phase 5 section).
+    """
+    provider = ctx.get("embedding_provider")
+    if provider is None:
+        logger.warning(
+            "embedding_generation_skipped_no_provider",
+            document_id=document_id,
+            graph_build_run_id=graph_build_run_id,
+        )
+        return
+
+    async with AsyncSessionLocal() as session:
+        embedding_service = EmbeddingService(
+            repository=EmbeddingRepository(session), provider=provider
+        )
+        items: list[EmbeddableItem] = []
+
+        if document_id is not None:
+            chunk_repo = DocumentChunkRepository(session)
+            chunks = await chunk_repo.list_for_document(uuid.UUID(document_id))
+            items.extend(
+                EmbeddableItem(
+                    source_type=EmbeddingSourceType.DOCUMENT_CHUNK,
+                    source_id=str(chunk.id),
+                    text=chunk.text,
+                )
+                for chunk in chunks
+                if chunk.text.strip()
+            )
+
+        if graph_build_run_id is not None:
+            items.extend(await _graph_embeddable_items(session))
+            items.extend(_canonical_entity_embeddable_items())
+            items.extend(await _ontology_embeddable_items(session))
+
+        if items:
+            await embedding_service.ensure_embedded(items)
+            await session.commit()
+
+        logger.info(
+            "embeddings_generated",
+            document_id=document_id,
+            graph_build_run_id=graph_build_run_id,
+            item_count=len(items),
+        )
+
+
+async def _graph_embeddable_items(session: Any) -> list[EmbeddableItem]:
+    node_repo = GraphNodeRepository(session)
+    edge_repo = GraphEdgeRepository(session)
+
+    nodes = await node_repo.list_nodes(status=GraphNodeStatus.ACTIVE, limit=10_000)
+    nodes_by_id = {node.id: node for node in nodes}
+    items = [
+        EmbeddableItem(
+            source_type=EmbeddingSourceType.GRAPH_NODE,
+            source_id=str(node.id),
+            text=_node_embedding_text(node),
+        )
+        for node in nodes
+    ]
+
+    edges = await edge_repo.list_edges(limit=10_000)
+    items.extend(
+        EmbeddableItem(
+            source_type=EmbeddingSourceType.GRAPH_EDGE,
+            source_id=str(edge.id),
+            text=_edge_embedding_text(edge, nodes_by_id),
+        )
+        for edge in edges
+        if edge.source_node_id in nodes_by_id and edge.target_node_id in nodes_by_id
+    )
+    return items
+
+
+def _node_embedding_text(node: GraphNode) -> str:
+    return " ".join([node.display_name, node.node_type, *node.aliases_json])
+
+
+def _edge_embedding_text(edge: GraphEdge, nodes_by_id: dict[uuid.UUID, GraphNode]) -> str:
+    source_name = nodes_by_id[edge.source_node_id].display_name
+    target_name = nodes_by_id[edge.target_node_id].display_name
+    return f"{source_name} {edge.relationship_type} {target_name}"
+
+
+def _canonical_entity_embeddable_items() -> list[EmbeddableItem]:
+    """Canonical entities come from CanonicalRegistries (static JSON, no
+    session needed) - content-hash-guarded downstream (EmbeddingService),
+    so embedding them on every graph rebuild is a cheap no-op after the
+    first run."""
+    items: list[EmbeddableItem] = []
+    registries = get_canonical_registries()
+    for registry in (registries.countries, registries.ports, registries.commodities):
+        items.extend(
+            EmbeddableItem(
+                source_type=EmbeddingSourceType.CANONICAL_ENTITY,
+                source_id=entry.canonical_id,
+                text=" ".join([entry.canonical_name, *entry.aliases]),
+            )
+            for entry in registry
+        )
+    return items
+
+
+async def _ontology_embeddable_items(session: Any) -> list[EmbeddableItem]:
+    ontology_repo = OntologyTypeRepository(session)
+    ontology_types = await ontology_repo.list_all()
+    return [
+        EmbeddableItem(
+            source_type=EmbeddingSourceType.ONTOLOGY_DEFINITION,
+            source_id=ontology_type.entity_type,
+            text=f"{ontology_type.entity_type}: {ontology_type.description}",
+        )
+        for ontology_type in ontology_types
+    ]

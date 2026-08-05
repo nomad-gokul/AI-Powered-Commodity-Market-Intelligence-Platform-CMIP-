@@ -1,8 +1,8 @@
 """Registers this module's four PromptPackages into the shared
-app.ai.prompts.PromptRegistry, exactly once per process.
+ai_service.prompts.registry.PromptRegistry, exactly once per process.
 
 get_prompt_registry() returns a process-wide singleton
-(app.ai.prompts.registry._default_registry) and PromptRegistry.register()
+(ai_service.prompts.registry._default_registry) and PromptRegistry.register()
 raises on a duplicate (name, version) key - both the API process
 (ExtractionService needs prompt_version/prompt_hash when creating an
 extraction_run row) and the worker process (the pipeline needs the actual
@@ -12,7 +12,8 @@ registration is wrapped in lru_cache to make it idempotent per process.
 
 from functools import lru_cache
 
-from app.ai.prompts.registry import PromptRegistry, get_prompt_registry
+from ai_service.prompts.registry import PromptRegistry, get_prompt_registry
+
 from app.modules.extraction.prompts import (
     document_understanding,
     entity_extraction,

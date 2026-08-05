@@ -4,7 +4,8 @@ extraction or a fresh pdfplumber pass - see TableExtractionAgent). The
 LLM never re-derives table structure; it only titles the table and
 normalizes each cell's value."""
 
-from app.ai.prompts.package import PromptMetadata, PromptPackage, PromptVersion
+from shared.prompt_contracts import PromptMetadata, PromptPackage, PromptVersion
+
 from app.modules.extraction.agents.schemas import TableExtractionOutput
 
 NAME = "table_extraction"

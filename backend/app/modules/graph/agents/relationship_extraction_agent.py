@@ -12,7 +12,8 @@ import itertools
 import uuid
 from collections import defaultdict
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.documents.repository import DocumentChunkRepository
 from app.modules.extraction.models import EntityMention, ExtractedEntity
 from app.modules.extraction.repository import EntityMentionRepository, ExtractionRunRepository

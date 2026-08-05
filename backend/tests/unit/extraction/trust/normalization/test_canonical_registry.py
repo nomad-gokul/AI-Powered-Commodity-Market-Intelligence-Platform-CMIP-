@@ -60,6 +60,18 @@ class TestCanonicalRegistry:
     def test_len_reflects_entry_count(self) -> None:
         assert len(self._registry()) == 2
 
+    def test_iterates_over_every_entry(self) -> None:
+        ids = {entry.canonical_id for entry in self._registry()}
+        assert ids == {"country:US", "country:IN"}
+
+    def test_resolve_by_id_returns_the_entry_for_a_known_canonical_id(self) -> None:
+        match = self._registry().resolve_by_id("country:IN")
+        assert match is not None
+        assert match.canonical_name == "India"
+
+    def test_resolve_by_id_unknown_id_returns_none(self) -> None:
+        assert self._registry().resolve_by_id("country:atlantis") is None
+
     def test_extra_metadata_is_preserved_on_match(self) -> None:
         registry = CanonicalRegistry(
             [

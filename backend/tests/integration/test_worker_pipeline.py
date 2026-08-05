@@ -164,6 +164,19 @@ async def _fetch_chunks(document_id: uuid.UUID) -> list[DocumentChunk]:
         return list(result.scalars().all())
 
 
+class _FakeRedisPool:
+    """Stands in for the real ArqRedis pool a live arq Worker always
+    injects into ctx["redis"] (see arq.worker.Worker.__init__) - these
+    tests call process_document directly, never through a real Worker, so
+    nothing would otherwise populate that key. Phase 5's embedding-
+    generation hook (process_document's tail) needs it to exist; these
+    ingestion-pipeline tests don't care whether that follow-up job was
+    actually enqueued, so a no-op is sufficient."""
+
+    async def enqueue_job(self, *args: object, **kwargs: object) -> None:
+        return None
+
+
 @pytest.fixture
 def worker_ctx(_isolated_document_storage: None) -> dict[str, object]:
     # Depends on _isolated_document_storage (autouse, from conftest.py) to
@@ -173,6 +186,7 @@ def worker_ctx(_isolated_document_storage: None) -> dict[str, object]:
     # at the real STORAGE_LOCAL_ROOT instead of the test's tmp_path.
     ctx = build_worker_context()
     ctx["job_id"] = "test-worker"
+    ctx["redis"] = _FakeRedisPool()
     return ctx
 
 

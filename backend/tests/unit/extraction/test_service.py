@@ -4,9 +4,9 @@ import uuid
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from ai_service.prompts.registry import PromptRegistry
+from shared.prompt_contracts import PromptMetadata, PromptPackage, PromptVersion
 
-from app.ai.prompts.package import PromptMetadata, PromptPackage, PromptVersion
-from app.ai.prompts.registry import PromptRegistry
 from app.core.exceptions import ConflictError, NotFoundError
 from app.modules.extraction.models import ExtractionRun, ExtractionStatus
 from app.modules.extraction.service import ExtractionService

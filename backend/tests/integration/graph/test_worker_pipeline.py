@@ -37,6 +37,22 @@ from app.worker.tasks import run_graph_rebuild
 pytestmark = pytest.mark.asyncio
 
 
+class _FakeRedisPool:
+    """Stands in for the real ArqRedis pool a live arq Worker always
+    injects into ctx["redis"] (see arq.worker.Worker.__init__) - these
+    tests call run_graph_rebuild directly, never through a real Worker.
+    Phase 5's embedding-generation hook (run_graph_rebuild's tail, reached
+    only on a successful completion) needs it to exist; this file's tests
+    don't care whether that follow-up job was actually enqueued, so a
+    no-op is sufficient."""
+
+    async def enqueue_job(self, *args: object, **kwargs: object) -> None:
+        return None
+
+
+_CTX: dict[str, object] = {"redis": _FakeRedisPool()}
+
+
 class _Fixture:
     def __init__(
         self,
@@ -272,7 +288,7 @@ async def _create_trusted_extraction_with_relationship() -> AsyncIterator[_Fixtu
 class TestRunGraphRebuild:
     async def test_full_pipeline_creates_nodes_edge_and_evidence(self) -> None:
         async with _create_trusted_extraction_with_relationship() as fixture:
-            await run_graph_rebuild({}, str(fixture.graph_build_run_id))
+            await run_graph_rebuild(_CTX, str(fixture.graph_build_run_id))
 
             async with AsyncSessionLocal() as session:
                 build_run = await session.get(GraphBuildRun, fixture.graph_build_run_id)
@@ -318,7 +334,7 @@ class TestRunGraphRebuild:
 
     async def test_rerunning_is_idempotent_not_additive(self) -> None:
         async with _create_trusted_extraction_with_relationship() as fixture:
-            await run_graph_rebuild({}, str(fixture.graph_build_run_id))
+            await run_graph_rebuild(_CTX, str(fixture.graph_build_run_id))
 
             async with AsyncSessionLocal() as session:
                 build_run = await session.get(GraphBuildRun, fixture.graph_build_run_id)
@@ -326,7 +342,7 @@ class TestRunGraphRebuild:
                 build_run.status = ExtractionStatus.PENDING
                 await session.commit()
 
-            await run_graph_rebuild({}, str(fixture.graph_build_run_id))
+            await run_graph_rebuild(_CTX, str(fixture.graph_build_run_id))
 
             async with AsyncSessionLocal() as session:
                 company_node = (

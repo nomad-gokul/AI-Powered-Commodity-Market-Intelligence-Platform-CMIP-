@@ -13,7 +13,8 @@ engine-level retry or an explicit re-trigger of POST
 
 import uuid
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.extraction.trust.agents.schemas import (
     ConfidenceAgentOutput,
     NormalizationAgentOutput,

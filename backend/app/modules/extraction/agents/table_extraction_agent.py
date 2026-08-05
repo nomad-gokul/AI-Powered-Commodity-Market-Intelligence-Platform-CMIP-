@@ -9,11 +9,12 @@ bounding boxes come from a fresh pdfplumber find_tables() pass
 coordinates). The LLM only titles the table and normalizes cell values.
 """
 
-from app.ai.engine.types import AgentContext
-from app.ai.prompts.package import PromptPackage
-from app.ai.prompts.registry import PromptRegistry
-from app.ai.providers.base import LLMRequest, LLMUsage
-from app.ai.structured.service import StructuredOutputService
+from ai_service.prompts.registry import PromptRegistry
+from ai_service.structured.service import StructuredOutputService
+from shared.agent_contracts import AgentContext
+from shared.ai_contracts import LLMRequest, LLMUsage
+from shared.prompt_contracts import PromptPackage
+
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.agents.schemas import (
     BoundingBoxModel,
@@ -87,9 +88,12 @@ class TableExtractionAgent:
             prompt_package_name=prompt.name,
             prompt_package_version=str(prompt.version),
         )
-        return await self._structured.generate_structured_with_usage(
-            request, TableExtractionOutput, correlation_id=context.correlation_id
+        result: tuple[TableExtractionOutput, LLMUsage] = (
+            await self._structured.generate_structured_with_usage(
+                request, TableExtractionOutput, correlation_id=context.correlation_id
+            )
         )
+        return result
 
 
 def _collect_raw_tables_by_page(chunks: list[DocumentChunk]) -> dict[int, list[RawTable]]:

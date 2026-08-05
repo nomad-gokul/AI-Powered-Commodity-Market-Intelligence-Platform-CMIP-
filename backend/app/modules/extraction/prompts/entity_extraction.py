@@ -4,7 +4,8 @@ granularity). Bounding boxes are never asked of the LLM - they're resolved
 afterward by matching raw_value against real PyMuPDF word-span geometry
 (domain.ground_bounding_box)."""
 
-from app.ai.prompts.package import PromptMetadata, PromptPackage, PromptVersion
+from shared.prompt_contracts import PromptMetadata, PromptPackage, PromptVersion
+
 from app.modules.extraction.agents.schemas import EntityExtractionOutput
 from app.modules.extraction.models import EntityType
 

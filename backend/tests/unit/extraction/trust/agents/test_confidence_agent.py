@@ -4,8 +4,8 @@ import uuid
 from unittest.mock import AsyncMock
 
 import pytest
+from shared.agent_contracts import AgentContext
 
-from app.ai.engine.types import AgentContext
 from app.modules.extraction.models import EntityType, ExtractionRun, ExtractionStatus
 from app.modules.extraction.trust.agents.confidence_agent import ConfidenceAgent
 from app.modules.extraction.trust.agents.schemas import (

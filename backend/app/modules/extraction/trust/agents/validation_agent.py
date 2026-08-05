@@ -13,7 +13,8 @@ two pipelines.
 
 import uuid
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.extraction.repository import (
     ExtractedEntityRepository,
     ExtractedTableRepository,

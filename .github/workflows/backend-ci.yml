@@ -20,7 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        # pgvector/pgvector:pg16, not postgres:16-alpine, since Phase 5
+        # (Knowledge Retrieval Platform) - alembic upgrade head below
+        # needs the `vector` extension available.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: cmip
           POSTGRES_PASSWORD: cmip_ci_password
@@ -66,7 +69,11 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr
 
       - name: Install dependencies
-        run: pip install -e ".[dev]"
+        # Since Pre-Phase 5 (AI Service Extraction), backend depends on
+        # two sibling local packages (cmip-shared, cmip-ai-service) - both
+        # must be installed editable from their own directories, same as
+        # the local dev/Docker install command (see README.md).
+        run: pip install -e ../shared -e ../ai-service -e ".[dev]"
 
       - name: Lint (ruff)
         run: ruff check .

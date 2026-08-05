@@ -60,3 +60,15 @@ class UnprocessableUploadError(CMIPError):
 class QuotaExceededError(CMIPError):
     status_code = 403
     error_code = "quota_exceeded"
+
+
+class ServiceUnavailableError(CMIPError):
+    """Raised when a request-time dependency this endpoint cannot proceed
+    without is unconfigured - e.g. Phase 5's /retrieve needs a real
+    embedding provider, unlike a background job's own FAILED status, an
+    inline endpoint has nowhere else to surface this than the response
+    itself. Distinct from a 500: the request is well-formed, the server
+    process is healthy, but a specific optional capability isn't set up."""
+
+    status_code = 503
+    error_code = "service_unavailable"

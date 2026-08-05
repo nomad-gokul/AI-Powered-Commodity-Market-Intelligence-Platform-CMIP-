@@ -22,9 +22,9 @@ from contextlib import asynccontextmanager
 import fitz
 import pytest
 from pydantic import BaseModel
+from shared.ai_contracts import LLMRequest, LLMUsage
 from sqlalchemy import delete, select
 
-from app.ai.providers.base import LLMRequest, LLMUsage
 from app.core.database import AsyncSessionLocal
 from app.modules.auth.models import User
 from app.modules.documents.models import Document, DocumentChunk, StorageProviderKind

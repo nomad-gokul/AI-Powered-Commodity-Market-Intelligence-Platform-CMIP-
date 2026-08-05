@@ -4,8 +4,8 @@ import uuid
 from unittest.mock import AsyncMock
 
 import pytest
+from shared.agent_contracts import AgentContext
 
-from app.ai.engine.types import AgentContext
 from app.modules.extraction.models import EntityType
 from app.modules.extraction.trust.agents.normalization_agent import NormalizationAgent
 from app.modules.extraction.trust.normalization.loader import get_canonical_registries

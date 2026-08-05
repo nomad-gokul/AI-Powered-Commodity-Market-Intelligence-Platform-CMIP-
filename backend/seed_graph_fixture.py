@@ -11,7 +11,11 @@ from app.modules.extraction.models import (
     ExtractionRun,
     ExtractionStatus,
 )
-from app.modules.extraction.trust.models import ConfidenceScore, NormalizationResult, TrustPipelineRun
+from app.modules.extraction.trust.models import (
+    ConfidenceScore,
+    NormalizationResult,
+    TrustPipelineRun,
+)
 
 
 async def main() -> None:

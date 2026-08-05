@@ -9,7 +9,8 @@ recorded so re-running a build on unchanged data is a true no-op.
 import uuid
 from typing import Any
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.graph.agents.schemas import (
     NodeResolutionOutput,
     PersistGraphResultsOutput,

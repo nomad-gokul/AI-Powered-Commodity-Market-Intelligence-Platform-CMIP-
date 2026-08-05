@@ -10,10 +10,11 @@ context.state["layout"]) via domain.ground_bounding_box - best-effort,
 None when no confident match, never a guess.
 """
 
-from app.ai.engine.types import AgentContext
-from app.ai.prompts.registry import PromptRegistry
-from app.ai.providers.base import LLMRequest, LLMUsage
-from app.ai.structured.service import StructuredOutputService
+from ai_service.prompts.registry import PromptRegistry
+from ai_service.structured.service import StructuredOutputService
+from shared.agent_contracts import AgentContext
+from shared.ai_contracts import LLMRequest, LLMUsage
+
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.agents.schemas import (
     BoundingBoxModel,

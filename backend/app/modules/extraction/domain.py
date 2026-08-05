@@ -18,7 +18,7 @@ here - those live in geometry.py. Unit tested standalone.
 import hashlib
 from dataclasses import dataclass
 
-from app.ai.providers.base import LLMUsage
+from shared.ai_contracts import LLMUsage
 
 
 @dataclass(frozen=True, slots=True)

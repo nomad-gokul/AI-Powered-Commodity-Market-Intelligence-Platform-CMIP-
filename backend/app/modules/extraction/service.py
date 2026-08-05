@@ -5,7 +5,8 @@ status, and list a document's entities/tables from its most recent run.
 
 import uuid
 
-from app.ai.prompts.registry import PromptRegistry
+from ai_service.prompts.registry import PromptRegistry
+
 from app.core.exceptions import ConflictError, NotFoundError
 from app.modules.audit.service import AuditService
 from app.modules.documents.repository import DocumentChunkRepository, DocumentRepository

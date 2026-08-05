@@ -11,7 +11,8 @@ replaces rather than duplicates its rows.
 
 import uuid
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.agents.schemas import (
     EntityExtractionAgentOutput,

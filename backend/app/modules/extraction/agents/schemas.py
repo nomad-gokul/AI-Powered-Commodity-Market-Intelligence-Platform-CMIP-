@@ -3,7 +3,7 @@
 Every agent returns only these - never free-form text, never a manually
 parsed JSON blob. StructuredOutputService validates every LLM response
 against one of these before an agent's run() ever sees it (see
-app.ai.structured.service). Fields a real, deterministic source can
+ai_service.structured.service). Fields a real, deterministic source can
 supply exactly (row_count, column_count, page_number, bounding_box) are
 never asked of the LLM - only genuinely interpretive fields are.
 """
@@ -13,8 +13,8 @@ from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field
+from shared.ai_contracts import LLMUsage
 
-from app.ai.providers.base import LLMUsage
 from app.modules.extraction.models import EntityType
 
 

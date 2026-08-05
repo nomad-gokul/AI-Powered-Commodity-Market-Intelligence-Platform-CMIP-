@@ -18,6 +18,7 @@ from app.modules.documents import models as documents_models  # noqa: F401
 from app.modules.extraction import models as extraction_models  # noqa: F401
 from app.modules.extraction.trust import models as extraction_trust_models  # noqa: F401
 from app.modules.graph import models as graph_models  # noqa: F401
+from app.modules.retrieval import models as retrieval_models  # noqa: F401
 
 config = context.config
 config.set_main_option("sqlalchemy.url", get_settings().database_url)

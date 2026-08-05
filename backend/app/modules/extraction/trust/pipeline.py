@@ -16,8 +16,8 @@ internal loop of many" distinction to make retries expensive or cheap.
 
 import uuid
 
-from app.ai.engine.base import EngineStep
-from app.ai.engine.types import RetryPolicy
+from shared.agent_contracts import EngineStep, RetryPolicy
+
 from app.modules.extraction.models import ExtractionRun
 from app.modules.extraction.repository import (
     ExtractedEntityRepository,

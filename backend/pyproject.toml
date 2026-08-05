@@ -40,27 +40,23 @@ dependencies = [
     "python-multipart>=0.0.20",
     "python-magic-bin>=0.4.14; sys_platform == 'win32'",
     "python-magic>=0.4.27; sys_platform != 'win32'",
-    # Phase 3.1: AI engine & LLM provider infrastructure
-    "groq>=0.11.0",
-    "anthropic>=0.39.0",
-    "openai>=1.54.0",
-    "httpx>=0.27.2",
-    "tenacity>=9.0.0",
+    # Phase 3.1: AI engine & LLM provider infrastructure. The provider SDKs
+    # themselves (groq/anthropic/openai/httpx) moved to ai-service's own
+    # pyproject.toml in Pre-Phase 5 (AI Service Extraction) - backend only
+    # needs the two local packages, installed editable into the same venv.
+    "cmip-shared",
+    "cmip-ai-service",
+    # Phase 5: Knowledge Retrieval Platform
+    "pgvector>=0.3.6",
+    "python-dateutil>=2.9.0",
 ]
 
-# NOTE: pgvector and langgraph are intentionally NOT dependencies yet - those
-# land in later phases (RAG/embeddings and the LangGraphEngine backend
-# respectively). PaddleOCR is available as the optional [paddleocr] extra
-# below, not a default/dev dependency: paddlepaddle's Windows wheel is
-# unreliable to install and this repo's dev environment can't verify it end
-# to end, so it is implemented for real but not exercised by the default
-# test suite (see docs/ARCHITECTURE.md). Groq/Claude/OpenAI/Ollama provider
-# SDKs ARE default dependencies (not optional) since LLMProvider selection
-# is a runtime config choice (LLM_PROVIDER=...), not a build-time one - see
-# docs/ARCHITECTURE.md's AI Infrastructure section for the provider testing
-# strategy (Groq is real+tested via GROQ_API_KEY; Claude/OpenAI/Ollama are
-# implemented for real against their official SDKs but unverified in this
-# environment, the same treatment PaddleOCR got in Phase 2).
+# NOTE: langgraph is intentionally NOT a dependency yet - it lands with the
+# LangGraphEngine backend in a later phase. PaddleOCR is available as the
+# optional [paddleocr] extra below, not a default/dev dependency:
+# paddlepaddle's Windows wheel is unreliable to install and this repo's dev
+# environment can't verify it end to end, so it is implemented for real but
+# not exercised by the default test suite (see docs/ARCHITECTURE.md).
 
 [project.optional-dependencies]
 dev = [
@@ -78,6 +74,13 @@ dev = [
     # instead, which needs the [server] extra.
     "moto[s3,server]>=5.0.16",
     "types-aiofiles>=24.1.0",
+    # Only needed by tests/integration's httpx.AsyncClient (ASGI transport
+    # against the app in-process) - not a runtime dependency of app/ itself.
+    # ai-service's OllamaProvider depends on httpx too (its own pyproject),
+    # but that's an unrelated, separate need.
+    "httpx>=0.27.2",
+    "cmip-shared[dev]",
+    "cmip-ai-service[dev]",
 ]
 paddleocr = [
     "paddleocr>=2.9.1",

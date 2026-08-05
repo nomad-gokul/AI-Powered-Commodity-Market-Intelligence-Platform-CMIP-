@@ -3,10 +3,11 @@ language, and business domain from a representative text sample. First
 stage of the pipeline - its extraction_strategy hint is read by
 EntityExtractionAgent."""
 
-from app.ai.engine.types import AgentContext
-from app.ai.prompts.registry import PromptRegistry
-from app.ai.providers.base import LLMRequest
-from app.ai.structured.service import StructuredOutputService
+from ai_service.prompts.registry import PromptRegistry
+from ai_service.structured.service import StructuredOutputService
+from shared.agent_contracts import AgentContext
+from shared.ai_contracts import LLMRequest
+
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.agents.schemas import (
     DocumentMetadataOutput,

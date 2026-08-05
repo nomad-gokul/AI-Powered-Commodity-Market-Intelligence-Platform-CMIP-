@@ -17,10 +17,10 @@ safely gets RetryPolicy(2) too.
 
 import uuid
 
-from app.ai.engine.base import EngineStep
-from app.ai.engine.types import RetryPolicy
-from app.ai.prompts.registry import PromptRegistry
-from app.ai.structured.service import StructuredOutputService
+from ai_service.prompts.registry import PromptRegistry
+from ai_service.structured.service import StructuredOutputService
+from shared.agent_contracts import EngineStep, RetryPolicy
+
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.agents.document_understanding_agent import DocumentUnderstandingAgent
 from app.modules.extraction.agents.entity_extraction_agent import EntityExtractionAgent

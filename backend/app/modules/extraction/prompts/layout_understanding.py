@@ -6,7 +6,8 @@ and classifying each block's structural role. The LLM is given a compact
 summary of the already-real block positions, never raw pixels, and never
 asked to invent coordinates - see domain.py's module docstring."""
 
-from app.ai.prompts.package import PromptMetadata, PromptPackage, PromptVersion
+from shared.prompt_contracts import PromptMetadata, PromptPackage, PromptVersion
+
 from app.modules.extraction.agents.schemas import LayoutModel
 
 NAME = "layout_understanding"

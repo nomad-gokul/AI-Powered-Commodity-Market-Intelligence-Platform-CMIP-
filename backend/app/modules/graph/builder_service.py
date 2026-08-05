@@ -22,8 +22,9 @@ rebuild, see pipeline.py/agents/persist_graph_results_agent.py).
 import uuid
 from dataclasses import dataclass, replace
 
-from app.ai.engine.sequential import SequentialEngine
-from app.ai.engine.types import AgentContext
+from ai_service.engine.sequential import SequentialEngine
+from shared.agent_contracts import AgentContext
+
 from app.core.exceptions import ConflictError
 from app.modules.documents.repository import DocumentChunkRepository
 from app.modules.extraction.models import ExtractionStatus

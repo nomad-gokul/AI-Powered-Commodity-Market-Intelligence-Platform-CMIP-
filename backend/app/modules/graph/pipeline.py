@@ -12,8 +12,8 @@ scoped to one run.
 
 import uuid
 
-from app.ai.engine.base import EngineStep
-from app.ai.engine.types import RetryPolicy
+from shared.agent_contracts import EngineStep, RetryPolicy
+
 from app.modules.documents.repository import DocumentChunkRepository
 from app.modules.extraction.repository import (
     EntityMentionRepository,

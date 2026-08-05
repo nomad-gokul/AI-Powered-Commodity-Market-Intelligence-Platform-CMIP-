@@ -14,7 +14,8 @@ same as every other trust agent.
 
 import uuid
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.extraction.models import ExtractedEntity, ExtractedTable, ExtractionRun
 from app.modules.extraction.repository import ExtractedEntityRepository, ExtractedTableRepository
 from app.modules.extraction.trust.agents.schemas import (

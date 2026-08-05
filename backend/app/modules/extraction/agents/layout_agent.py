@@ -9,10 +9,11 @@ No LLM call ever sees or invents a coordinate - every bbox in this
 agent's output is measured, not guessed.
 """
 
-from app.ai.engine.types import AgentContext
-from app.ai.prompts.registry import PromptRegistry
-from app.ai.providers.base import LLMRequest
-from app.ai.structured.service import StructuredOutputService
+from ai_service.prompts.registry import PromptRegistry
+from ai_service.structured.service import StructuredOutputService
+from shared.agent_contracts import AgentContext
+from shared.ai_contracts import LLMRequest
+
 from app.modules.extraction.agents.schemas import (
     BoundingBoxModel,
     LayoutAgentOutput,

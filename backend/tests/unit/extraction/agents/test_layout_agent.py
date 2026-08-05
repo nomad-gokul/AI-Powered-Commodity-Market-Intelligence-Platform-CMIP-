@@ -4,9 +4,9 @@ call for the interpretive reading-order classification."""
 import io
 
 import fitz
+from shared.agent_contracts import AgentContext
+from shared.ai_contracts import LLMUsage
 
-from app.ai.engine.types import AgentContext
-from app.ai.providers.base import LLMUsage
 from app.modules.extraction.agents.layout_agent import LayoutAgent
 from app.modules.extraction.agents.schemas import LayoutModel, PageLayout, ReadingOrderBlock
 from app.modules.extraction.prompts import get_extraction_prompt_registry

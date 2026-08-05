@@ -25,7 +25,13 @@ from app.core.logging import configure_logging, get_logger
 from app.modules.audit import models as audit_models  # noqa: F401
 from app.modules.auth import models as auth_models  # noqa: F401
 from app.worker.context import build_worker_context
-from app.worker.tasks import process_document, run_extraction, run_graph_rebuild, run_trust_pipeline
+from app.worker.tasks import (
+    generate_embeddings_task,
+    process_document,
+    run_extraction,
+    run_graph_rebuild,
+    run_trust_pipeline,
+)
 
 logger = get_logger(__name__)
 
@@ -41,7 +47,13 @@ async def shutdown(ctx: dict[str, Any]) -> None:
 
 
 class WorkerSettings:
-    functions = [process_document, run_extraction, run_trust_pipeline, run_graph_rebuild]
+    functions = [
+        process_document,
+        run_extraction,
+        run_trust_pipeline,
+        run_graph_rebuild,
+        generate_embeddings_task,
+    ]
     on_startup = startup
     on_shutdown = shutdown
     redis_settings = RedisSettings.from_dsn(get_settings().redis_url)

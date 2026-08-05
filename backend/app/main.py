@@ -43,6 +43,7 @@ from app.modules.graph.api import (
     graph_relationships_router,
     graph_router,
 )
+from app.modules.retrieval.api import retrieval_router, retrieval_runs_router
 
 logger = get_logger(__name__)
 
@@ -131,6 +132,8 @@ def create_app() -> FastAPI:
         graph_edges_router,
         graph_entity_router,
         graph_relationships_router,
+        retrieval_router,
+        retrieval_runs_router,
     ):
         app.include_router(router, prefix=prefix)
 

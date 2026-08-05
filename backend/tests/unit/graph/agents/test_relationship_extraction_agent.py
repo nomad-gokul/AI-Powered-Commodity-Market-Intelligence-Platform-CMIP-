@@ -6,8 +6,8 @@ import uuid
 from unittest.mock import AsyncMock
 
 import pytest
+from shared.agent_contracts import AgentContext
 
-from app.ai.engine.types import AgentContext
 from app.modules.documents.models import DocumentChunk
 from app.modules.extraction.models import EntityMention, EntityType, ExtractionRun, ExtractionStatus
 from app.modules.graph.agents.relationship_extraction_agent import RelationshipExtractionAgent

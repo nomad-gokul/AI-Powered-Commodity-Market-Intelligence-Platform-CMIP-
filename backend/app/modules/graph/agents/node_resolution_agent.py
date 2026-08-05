@@ -12,7 +12,8 @@ given, same "only Persist writes" separation trust/agents/ established.
 
 import uuid
 
-from app.ai.engine.types import AgentContext
+from shared.agent_contracts import AgentContext
+
 from app.modules.extraction.models import ExtractedEntity
 from app.modules.extraction.repository import ExtractedEntityRepository
 from app.modules.extraction.trust.repository import (

@@ -4,8 +4,8 @@ context.state and decides which entities need human review."""
 import uuid
 
 import pytest
+from shared.agent_contracts import AgentContext
 
-from app.ai.engine.types import AgentContext
 from app.modules.extraction.trust.agents.review_queue_agent import ReviewQueueAgent
 from app.modules.extraction.trust.agents.schemas import (
     ConfidenceAgentOutput,

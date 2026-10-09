@@ -1,0 +1,72 @@
+{
+  "corpus": {
+    "documents": 60,
+    "pages": 480,
+    "native_pages": 435,
+    "scanned_pages_ocrd": 45,
+    "megabytes": 98.89501,
+    "scanned_pages_in_manifest": 45
+  },
+  "scaling": {
+    "1": {
+      "wall_seconds": 98.16324764300003,
+      "pages_per_sec": 4.889813769667272,
+      "mb_per_sec": 1.0074545451028805,
+      "docs_per_min": 36.67360327250454
+    },
+    "2": {
+      "wall_seconds": 51.005083282999976,
+      "pages_per_sec": 9.410826707932937,
+      "mb_per_sec": 1.9389245862276978,
+      "docs_per_min": 70.58120030949704
+    }
+  },
+  "stage_seconds_total": {
+    "read": 0.03276367700021865,
+    "hash_validate": 0.0827681069999926,
+    "native_extract": 11.964531721000242,
+    "ocr": 64.21065360499978,
+    "table_extract": 21.01752131599983,
+    "chunk": 0.19082724100002224
+  },
+  "stage_share_pct": {
+    "read": 0.033604093307027426,
+    "hash_validate": 0.0848911796577417,
+    "native_extract": 12.271432181580181,
+    "ocr": 65.85771172854713,
+    "table_extract": 21.556638694142382,
+    "chunk": 0.19572212276554193
+  },
+  "per_page_ms": {
+    "native_text": 24.926107752083837,
+    "ocr": 1426.9034134444394
+  },
+  "hash_validate_mb_per_sec": 1194.8444102993542,
+  "ocr_quality": {
+    "pages_evaluated": 45,
+    "all_scanned_pages_routed_to_ocr": true,
+    "word_recall_mean": 0.9953008019626599,
+    "numeric_recall_mean": 0.9742269061820881,
+    "numeric_recall_min": 0.8787878787878788,
+    "tesseract_confidence_mean": 0.9421218165984269
+  },
+  "tables": {
+    "detected": 216
+  },
+  "chunks": {
+    "count": 500,
+    "tokens_mean": 396.86,
+    "tokens_p50": 412,
+    "tokens_p95": 495,
+    "tokens_max": 530,
+    "within_size_plus_overlap": true,
+    "deterministic_rechunk": true
+  },
+  "dedup": {
+    "unique_sha256": 60,
+    "documents": 60
+  },
+  "language_detected": [
+    "en"
+  ]
+}
